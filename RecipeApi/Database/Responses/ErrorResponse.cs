@@ -5,7 +5,8 @@ using RecipeApi.Exceptions;
 
 namespace RecipeApi.Database;
 
-public class ErrorResponse {
+public class ErrorResponse 
+{
 
     [JsonPropertyName("statusCode")]
     public HttpStatusCode StatusCode { get; set;}
@@ -14,14 +15,19 @@ public class ErrorResponse {
     public List<string> Errors { get; set; }
 
     // Required for JSON serialization 
-    public ErrorResponse() {
-
+    public ErrorResponse() 
+    {
+        Errors = new List<string>();
     }
 
-    public ErrorResponse(HttpException exception) {
+    public ErrorResponse(HttpException exception) 
+    {
         StatusCode = exception.StatusCode;
         Errors = new List<string>();
 
-        Errors.Add(exception.Message);
+        if (!string.IsNullOrEmpty(exception.Message))
+        {
+            Errors.Add(exception.Message);
+        }
     }
 }

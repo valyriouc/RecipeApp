@@ -1,11 +1,15 @@
 
 using System.Net;
+using System.Security.Claims;
 using System.Text;
 
 using Microsoft.AspNetCore.Http;
 using RecipeApi.Exceptions;
 using RecipeApi.Middlewares;
 using RecipeApi.Tests.Database;
+using RecipeApi.Tests.Helper.AuthenticationServices;
+using RecipeApi.Tests.Helper.ServiceProviders;
+
 using Xunit;
 
 namespace RecipeApi.Tests.Middlewares;
@@ -19,14 +23,13 @@ public class LoginMiddlwareShould {
         LoginMiddleware middleware = new LoginMiddleware(async (HttpContext _ ) => {
             isCalled = true;
             await Task.CompletedTask;
-        },
-        new AuthDbContext());
+        });
         
         HttpContext context = new DefaultHttpContext();
 
         context.Request.Path = "/register";
 
-        await middleware.InvokeAsync(context);
+        await middleware.InvokeAsync(context, new AuthDbContext());
 
         Assert.Equal(HttpStatusCode.OK, (HttpStatusCode)context.Response.StatusCode);
         Assert.True(isCalled);
@@ -35,22 +38,21 @@ public class LoginMiddlwareShould {
     [Fact]
     public async Task ThrowExceptionWhenWrongMethodIsUsed() {
         LoginMiddleware middleware = new LoginMiddleware(
-            async (HttpContext _) => await Task.CompletedTask,
-            new AuthDbContext());
+            async (HttpContext _) => await Task.CompletedTask);
 
         HttpContext context = new DefaultHttpContext();
 
         context.Request.Path = "/login";
         context.Request.Method = "GET";
 
-        await Assert.ThrowsAsync<HttpException>(() => middleware.InvokeAsync(context));
+        await Assert.ThrowsAsync<HttpException>(
+            () => middleware.InvokeAsync(context, new AuthDbContext()));
     }
 
     [Fact]
     public async Task ThrowsExceptionWhenNotAbleToParseCredentials() {
         LoginMiddleware middleware = new LoginMiddleware(
-            async (HttpContext _) => await Task.CompletedTask,
-            new AuthDbContext()
+            async (HttpContext _) => await Task.CompletedTask
         );
 
         HttpContext context = new DefaultHttpContext();
@@ -73,16 +75,14 @@ public class LoginMiddlwareShould {
         context.Request.Body.Write(bytes);
 
         await Assert.ThrowsAsync<HttpException>(
-            () => middleware.InvokeAsync(context));
+            () => middleware.InvokeAsync(context, new AuthDbContext()));
     }
 
     [Fact]
     public async Task ThrowsExceptionWhenPasswordIsNotPresent()
     {
         LoginMiddleware middleware = new LoginMiddleware(
-            async (HttpContext _) => await Task.CompletedTask,
-            new AuthDbContext()
-        );
+            async (HttpContext _) => await Task.CompletedTask);
 
         HttpContext context = new DefaultHttpContext();
 
@@ -103,16 +103,14 @@ public class LoginMiddlwareShould {
         context.Request.Body.Write(bytes);
 
         await Assert.ThrowsAsync<HttpException>(
-            () => middleware.InvokeAsync(context));
+            () => middleware.InvokeAsync(context, new AuthDbContext()));
     }
 
     [Fact]
     public async Task ThrowsExceptionWhenEmailIsNotPresent()
     {
         LoginMiddleware middleware = new LoginMiddleware(
-            async (HttpContext _) => await Task.CompletedTask,
-            new AuthDbContext()
-        );
+            async (HttpContext _) => await Task.CompletedTask);
 
         HttpContext context = new DefaultHttpContext();
 
@@ -133,15 +131,13 @@ public class LoginMiddlwareShould {
         context.Request.Body.Write(bytes);
 
         await Assert.ThrowsAsync<HttpException>(
-            () => middleware.InvokeAsync(context));
+            () => middleware.InvokeAsync(context, new AuthDbContext()));
     }
 
     [Fact]
     public async Task ThrowsExceptionWhenUserDoesNotExists() {
         LoginMiddleware middleware = new LoginMiddleware(
-            async (HttpContext _) => await Task.CompletedTask,
-            new AuthDbContext()
-        );
+            async (HttpContext _) => await Task.CompletedTask);
 
         HttpContext context = new DefaultHttpContext();
 
@@ -153,7 +149,7 @@ public class LoginMiddlwareShould {
             """
             {
                 "email": "hello.testing@gmail.com",
-                "password: "Nice123"
+                "password": "Nice123"
             }
             """;
 
@@ -162,15 +158,13 @@ public class LoginMiddlwareShould {
         context.Request.Body.Write(bytes);
 
         await Assert.ThrowsAsync<HttpException>(
-            () => middleware.InvokeAsync(context));
+            () => middleware.InvokeAsync(context, new AuthDbContext()));
     }
 
     [Fact]
     public async Task ThrowsExceptionWhenPasswordForCorrectUserIsWrong() {
         LoginMiddleware middleware = new LoginMiddleware(
-            async (HttpContext _) => await Task.CompletedTask,
-            new AuthDbContext()
-        );
+            async (HttpContext _) => await Task.CompletedTask);
         
         HttpContext context = new DefaultHttpContext();
 
@@ -191,15 +185,14 @@ public class LoginMiddlwareShould {
         context.Request.Body.Write(bytes);
 
         await Assert.ThrowsAsync<HttpException>(
-            () => middleware.InvokeAsync(context));
+            () => middleware.InvokeAsync(context, new AuthDbContext()));
     }
 
     [Fact]
     public async Task ReturnsStatusCodeOkAndSignsInTheUser()
     {
         LoginMiddleware middleware = new LoginMiddleware(
-            async (HttpContext _) => await Task.CompletedTask,
-            new AuthDbContext());
+            async (HttpContext _) => await Task.CompletedTask);
 
         HttpContext context = new DefaultHttpContext();
 
@@ -218,10 +211,28 @@ public class LoginMiddlwareShould {
         byte[] bytes = Encoding.UTF8.GetBytes(payload);
 
         context.Request.Body.Write(bytes);
+        context.RequestServices = new AuthServiceProvider();
+        context.Request.Body.Position = 0;
 
-        context.RequestServices.AddAuthentication
-        await middleware.InvokeAsync(context);
+        await middleware.InvokeAsync(context, new AuthDbContext());
 
         Assert.Equal(HttpStatusCode.OK, (HttpStatusCode)context.Response.StatusCode);
+
+        Claim? idClaim = context.User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Sid);
+        Claim? nameClaim = context.User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Name);
+        Claim? roleClaim = context.User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Role);
+        Claim? emailClaim = context.User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Email);
+
+        Assert.NotNull(idClaim);
+        Assert.Equal("0", idClaim.Value);
+
+        Assert.NotNull(nameClaim);
+        Assert.Equal("maxmuster", nameClaim.Value);
+
+        Assert.NotNull(roleClaim);
+        Assert.Equal("User", roleClaim.Value);
+
+        Assert.NotNull(emailClaim);
+        Assert.Equal("max.mustermann@gmail.com", emailClaim.Value);
     }
 }

@@ -12,7 +12,8 @@ namespace RecipeApi.Tests.Middlewares;
 public sealed class ExceptionMiddlwareShould {
 
     [Fact]
-    public async Task CatchHttpExceptionAndReturnAppropriateResponseWithCorrectStatusCode() {
+    public async Task CatchHttpExceptionAndReturnAppropriateResponseWithCorrectStatusCode() 
+    {
         
         ExceptionMiddlware middlware = new ExceptionMiddlware(
             (HttpContext _ ) => throw HttpException.MethodNotAllowed());
@@ -27,7 +28,8 @@ public sealed class ExceptionMiddlwareShould {
     }
 
     [Fact]
-    public async Task CatchHttpExceptionAndReturnAppropriateResponseWithCorrectStatusCodeAndMessage() {
+    public async Task CatchHttpExceptionAndReturnAppropriateResponseWithCorrectStatusCodeAndMessage() 
+    {
         ExceptionMiddlware middleware = new ExceptionMiddlware(
             (HttpContext _) => throw HttpException.BadRequest("This is a exception"));
 
@@ -41,7 +43,8 @@ public sealed class ExceptionMiddlwareShould {
             (HttpStatusCode)context.Response.StatusCode);
 
         context.Response.Body.Position = 0;
-        ErrorResponse? res = JsonSerializer.Deserialize<ErrorResponse>(context.Response.Body);
+        ErrorResponse? res = JsonSerializer.Deserialize<ErrorResponse>(
+            context.Response.Body);
 
         Assert.NotNull(res);
         Assert.Single(res.Errors);
@@ -49,7 +52,8 @@ public sealed class ExceptionMiddlwareShould {
     } 
 
     [Fact]
-    public async Task CatchNotFoundExceptionAndReturnsAppropriateResponse() {
+    public async Task CatchNotFoundExceptionAndReturnsAppropriateResponse()
+    {
         ExceptionMiddlware middleware = new ExceptionMiddlware(
             (HttpContext _) => throw HttpException.NotFound("This is a exception"));
         
@@ -72,7 +76,8 @@ public sealed class ExceptionMiddlwareShould {
     }
     
     [Fact]
-    public async Task CatchExceptionAndReturnInternalServerErrorStatusCode() {
+    public async Task CatchExceptionAndReturnInternalServerErrorStatusCode() 
+    {
         ExceptionMiddlware middleware = new ExceptionMiddlware(
             (HttpContext _) => throw new Exception("Something went wrong")
         );

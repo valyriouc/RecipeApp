@@ -16,16 +16,13 @@ public class LoginMiddleware {
 
     public RequestDelegate Next { get; set; }
 
-    public IDbContext DbContext { get; set; }
-
     public LoginMiddleware(
-        RequestDelegate next,
-        IDbContext dbContext) {
-        DbContext = dbContext;
+        RequestDelegate next) {
+
         Next = next;
     }
 
-    public async Task InvokeAsync(HttpContext httpContext) {
+    public async Task InvokeAsync(HttpContext httpContext, IDbContext dbContext) {
 
         if (httpContext.Request.Path != "/login") {
            await Next(httpContext);
@@ -36,15 +33,15 @@ public class LoginMiddleware {
             throw HttpException.MethodNotAllowed();
         }
 
-        LoginEntity? entity = httpContext.Request.BodyAsJson<LoginEntity>();
+        LoginEntity? entity = await httpContext.Request.BodyAsJsonAsync<LoginEntity>();
         
         if (entity?.Email is null || entity?.Password is null) {
             throw HttpException.BadRequest("Invalid user credentials!");
         }
 
-        string query = $"SELECT * FROM User WHERE email={entity.Email}";
+        string query = $"SELECT * FROM User WHERE email='{entity.Email}'";
 
-        IEnumerable<User> users = await DbContext
+        IEnumerable<User> users = await dbContext
             .GetEntitiesAsync<User>(query);
 
         User? user = users.FirstOrDefault(
