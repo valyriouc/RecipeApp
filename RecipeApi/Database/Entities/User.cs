@@ -1,3 +1,6 @@
+using RecipeApi.Database.Entities;
+
+using System.Data.Common;
 using System.Security.Claims;
 
 namespace RecipeApi.Database;
@@ -7,7 +10,8 @@ public enum UserRoles {
     Admin = 1,
 }
 
-public class User {
+public class User : IDatabaseReadable<User>
+{
     
     public int Id { get; set; }
 
@@ -19,10 +23,11 @@ public class User {
     
     public string Password { get; set; }
 
-    public User() {
+    public User() 
+    {
 
     }
-    
+
     public ClaimsPrincipal CreatePrinciple() => 
         new ClaimsPrincipal(
             new ClaimsIdentity(
@@ -34,5 +39,17 @@ public class User {
                 }
             )
         );
-    
+
+    public static User CreateFrom(DbDataReader reader)
+    {
+        User user = new();
+
+        user.Id = reader.GetInt32(0);
+        user.Username = reader.GetString(1);
+        user.Role = (UserRoles)reader.GetInt32(2);
+        user.Email = reader.GetString(3);
+        user.Password = reader.GetString(4);
+
+        return user;
+    }
 }

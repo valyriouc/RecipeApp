@@ -1,7 +1,10 @@
 
+using System.Collections;
 using System.Data;
 using System.Data.Common;
 using MySqlConnector;
+
+using RecipeApi.Database.Entities;
 
 namespace RecipeApi.Database;
 
@@ -42,6 +45,7 @@ internal class RecipeDbContext : IDbContext, IDisposable
     }
 
     public IEnumerable<TEntity> GetEntities<TEntity>(string query)
+        where TEntity : IDatabaseReadable<TEntity>, new()
     {
         using DbCommand command = Connection.CreateCommand();
 
@@ -49,12 +53,14 @@ internal class RecipeDbContext : IDbContext, IDisposable
 
         DbReader = command.ExecuteReader();
 
-        IEnumerable<TEntity> entities = DbReader.OfType<TEntity>();
-
-        return entities;
+        do
+        {
+            yield return TEntity.CreateFrom(DbReader);
+        } while (DbReader.NextResult());
     }
 
     public async Task<IEnumerable<TEntity>> GetEntitiesAsync<TEntity>(string query)
+        where TEntity : IDatabaseReadable<TEntity>, new() 
     {
         using DbCommand command = Connection.CreateCommand();
 
@@ -62,7 +68,12 @@ internal class RecipeDbContext : IDbContext, IDisposable
 
         DbReader = await command.ExecuteReaderAsync();
 
-        IEnumerable<TEntity> entities = DbReader.OfType<TEntity>();
+        List<TEntity> entities = new List<TEntity>();
+
+        do
+        {
+            entities.Add(TEntity.CreateFrom(DbReader));
+        } while (DbReader.NextResult());
 
         return entities;
     }
