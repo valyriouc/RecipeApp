@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
-using System.Windows.Navigation;
 
 namespace RecipeClient.Model.InMemory;
 
@@ -62,7 +61,7 @@ public class InMemUser
     }
 
     public static bool IsValidEmail(string email) =>
-        Validator.TryValidateValue(
+        !string.IsNullOrWhiteSpace(email) && Validator.TryValidateValue(
             email,
             new ValidationContext(email),
             new List<ValidationResult>(),
@@ -73,7 +72,7 @@ public class InMemUser
             });
 
     public static bool IsValidUsername(string username) =>
-        Validator.TryValidateValue(
+        !string.IsNullOrWhiteSpace(username) && Validator.TryValidateValue(
                 username,
                 new ValidationContext(username),
                 new List<ValidationResult>(),
@@ -84,7 +83,7 @@ public class InMemUser
                 });
 
     public static bool IsValidPassword(string password) =>
-        Validator.TryValidateValue(
+        !string.IsNullOrWhiteSpace(password) && Validator.TryValidateValue(
             password,
             new ValidationContext(password),
             new List<ValidationResult>(),
@@ -106,14 +105,15 @@ public class InMemUser
         string email, 
         string password)
     {
-        if (!IsValidEmail(email) || !IsValidUsername(username) || !IsValidPassword(password))
+        if (!IsValidEmail(email) || 
+            !IsValidUsername(username) || 
+            !IsValidPassword(password))
         {
             throw new Exception("This is a validation error in the user (Will be replaced with a application exception)");
         }
 
         string passwordHash = GenerateSha512PasswordHash(password);
 
-        return new InMemUser(username, email, passwordHash);
+        return new InMemUser(username.Trim(), email.Trim(), passwordHash);
     }
-
 }
