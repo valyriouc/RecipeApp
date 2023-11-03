@@ -4,17 +4,37 @@ using System.ComponentModel.DataAnnotations;
 
 namespace RecipeClient.Model.InMemory;
 
+public readonly struct InMemIngredMeasureUnit : IEquatable<InMemIngredMeasureUnit>
+{
+    public InMemIngredient Ingredient { get; }
+
+    public InMemMeasureUnit MeasureUnit { get; }
+
+    public InMemIngredMeasureUnit(InMemIngredient ingredient, InMemMeasureUnit measureUnit)
+    {
+        Ingredient = ingredient;
+        MeasureUnit = measureUnit;
+    }
+
+    public bool Equals(InMemIngredMeasureUnit other)
+    {
+        return Ingredient.Equals(other.Ingredient);
+    }
+}
+
 public sealed class InMemRecipe
 {
     private static int ObjectCounter { get; set; } = 0;
 
+    public HashSet<InMemIngredMeasureUnit> Ingredients { get; set; }
+
     public int Id { get; }
 
-    public string Title { get; set; } = null!;
+    public string Title { get; private set; } = null!;
 
     public DateTime CreatedAt { get; }
 
-    public string? Description { get; set; }
+    public string? Description { get; private set; }
 
     public InMemUser User { get; }
 
@@ -27,6 +47,7 @@ public sealed class InMemRecipe
         CreatedAt = DateTime.Now; // This has to be UTC for web api 
         Description = description;
         User = user;
+        Ingredients = new HashSet<InMemIngredMeasureUnit>();
     }
     
     public void Update(string title, string? description)
