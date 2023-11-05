@@ -1,6 +1,6 @@
-﻿namespace RecipeClient.Model.InMemory;
+﻿namespace RecipeClient.Model;
 
-public struct InMemMeasureUnit
+internal class MeasureUnit : ModelBase
 {
     private static int ObjectCounter { get; set; } = 0;
 
@@ -8,7 +8,7 @@ public struct InMemMeasureUnit
 
     public string Name { get; }
 
-    private InMemMeasureUnit(string name)
+    private MeasureUnit(string name)
     {
         ObjectCounter += 1;
 
@@ -16,7 +16,6 @@ public struct InMemMeasureUnit
         Name = name.Trim();
     }
 
-    public static InMemMeasureUnit Create(string name) =>
-        new InMemMeasureUnit(name);
+    public static MeasureUnit Create(string name) =>
+        new MeasureUnit(name);
 }
-
