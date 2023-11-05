@@ -6,7 +6,7 @@ using System.Text;
 
 namespace RecipeClient.Model
 {
-    internal class User : ModelBase
+    public class User : ModelBase
     {
         private static int ObjectCounter { get; set; } = 0;
 

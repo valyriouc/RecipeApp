@@ -1,12 +1,10 @@
-﻿using RecipeClient.Model.InMemory;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace RecipeClient.Model
 {
-    internal sealed class Recipe : ModelBase
+    public sealed class Recipe : ModelBase
     {
         private static int ObjectCounter { get; set; } = 0;
 
@@ -18,9 +16,9 @@ namespace RecipeClient.Model
 
         public string? Description { get; private set; }
 
-        public InMemUser User { get; }
+        public User User { get; }
 
-        private Recipe(string title, string? description, InMemUser user)
+        private Recipe(string title, string? description, User user)
         {
             ObjectCounter += 1;
 
@@ -44,7 +42,7 @@ namespace RecipeClient.Model
             Description = description?.Trim();
         }
 
-        public bool TryAddIngredient(InMemIngredient ingredient, InMemMeasureUnit measureUnit) =>
+        public bool TryAddIngredient(Ingredient ingredient, MeasureUnit measureUnit) =>
             Ingredients.Add(new InMemIngredMeasureUnit(ingredient, measureUnit));
 
         public static bool IsValidTitle(string title) =>
@@ -61,7 +59,7 @@ namespace RecipeClient.Model
         public static Recipe Create(
             string title,
             string? description,
-            InMemUser user)
+            User user)
         {
             if (!IsValidTitle(title))
             {
@@ -78,11 +76,11 @@ namespace RecipeClient.Model
 
     public readonly struct InMemIngredMeasureUnit : IEquatable<InMemIngredMeasureUnit>
     {
-        public InMemIngredient Ingredient { get; }
+        public Ingredient Ingredient { get; }
 
-        public InMemMeasureUnit MeasureUnit { get; }
+        public MeasureUnit MeasureUnit { get; }
 
-        public InMemIngredMeasureUnit(InMemIngredient ingredient, InMemMeasureUnit measureUnit)
+        public InMemIngredMeasureUnit(Ingredient ingredient, MeasureUnit measureUnit)
         {
             Ingredient = ingredient;
             MeasureUnit = measureUnit;

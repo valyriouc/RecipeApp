@@ -12,6 +12,11 @@ namespace RecipeClient
 
             MainWindow window = new MainWindow();
 
+            app.DispatcherUnhandledException += (sender, args) =>
+            {
+                MessageBox.Show(window, args.Exception.Message);
+            };
+
             app.Run(window);
         }
     }

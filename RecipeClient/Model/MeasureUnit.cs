@@ -1,10 +1,8 @@
 ﻿namespace RecipeClient.Model;
 
-internal class MeasureUnit : ModelBase
+public class MeasureUnit : ModelBase
 {
     private static int ObjectCounter { get; set; } = 0;
-
-    public int Id { get; }
 
     public string Name { get; }
 

@@ -1,14 +1,6 @@
-﻿using RecipeClient.Model.InMemory;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RecipeClient.Model
+﻿namespace RecipeClient.Model
 {
-    internal class Ingredient : ModelBase
+    public class Ingredient : ModelBase
     {
         private static int ObjectCounter { get; set; } = 0;
 
@@ -39,7 +31,7 @@ namespace RecipeClient.Model
             return Id.GetHashCode() + Name.GetHashCode();
         }
 
-        public bool Equals(InMemIngredient other)
+        public bool Equals(Ingredient other)
         {
             return this.GetHashCode() == other.GetHashCode();
         }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RecipeClient.Model
 {
-    internal abstract class ModelBase
+    public abstract class ModelBase
     {
         public int Id { get; set; }
     }
